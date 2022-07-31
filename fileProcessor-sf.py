@@ -1,5 +1,6 @@
 # Written by Alexander Zhu
 import os
+from webscraperFunc import runWebscraper
 
 # Gets the path to the directory containing all csv files
 def getDirectoryPath(dirName):
@@ -49,25 +50,51 @@ def processFilesInDir(dirName):
 
 
 
-# Processes a file using its fileName and pathName
+# Processes a file using its fileName and pathName (insert function inside)
 def processFile(fileName, filePath):
-  # add file processing function here
-  pass
+  runWebscraper(fileName, filePath)
 
 
 
 # After a file is processed, store it in a folder called 'processed'
 def storeFile(fileName, filePath, dirPath):
+  ### Change the folder name of processed files
   folderName = 'processed'
-  processedPath = os.path.join(dirPath, folderName)
+  folderPath = os.path.join(dirPath, folderName)
   
   # create the 'processed' folder if it does not exist
   if (folderName not in os.listdir(dirPath)):
-    os.mkdir(processedPath)
+    os.mkdir(folderPath)
     print(f"--> Created the {folderName} directory because the folder was not found...")
 
-  # move the current file to the 'processed' directory and add a 'p-' tag.
-  os.rename(filePath, os.path.join(processedPath, 'p-' + fileName))
+  # move the current file to the 'processed' directory.
+  os.rename(filePath, os.path.join(folderPath, 'p-' + fileName))
+
+  # move new files into a "to_split" folder
+  moveNewFile(fileName, dirPath)
+
+
+
+# For Studyfind Automation: moves new webscraped files into a "to_split" folder.
+# This function relies on the fact that the webscraper code writes the data
+# into a NEW csv file with the same file name, but creates it in the current directory.
+def moveNewFile(fileName, dirPath):
+  ### Change folder name as needed
+  folderName = 'to_split'
+  folderPath = os.path.join(dirPath, folderName)
+
+  # create the 'to_split' directory if it does not exist
+  if (folderName not in os.listdir(dirPath)):
+    os.mkdir(folderPath)
+    print(f"--> Created the {folderName} directory because the folder was not found...")
+  
+  # move the new file into the 'to_split' folder. make sure the file exists.
+  newFilePath = os.path.join(os.getcwd(), fileName)
+  if (os.path.isfile(newFilePath)):
+    os.rename(newFilePath, os.path.join(folderPath, fileName))
+  else:
+    print(f"--> {fileName} is not a file in the current directory.")
+
 
 
 
