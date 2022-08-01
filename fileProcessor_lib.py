@@ -1,7 +1,10 @@
 # Written by Alexander Zhu
 import os
 import pandas as pd
-######################### PROCESSING FUNCTIONS #################################
+
+
+
+############################ ProcessFilesInDir #################################
 
 def processFilesInDir(dirName, processingFunc, 
   createDir=True, moveNewFiles=False, splitFiles=False, splitSize=50,
@@ -24,10 +27,13 @@ def processFilesInDir(dirName, processingFunc,
     print(f"--> The '{dirName}' folder is empty. Please add '{suffix}' files into this folder for processing.")
     return
   
+  # To prevent accidentally deleting files. Prompt only accepts 'y' to continue
+  # to prevent accidental key presses from continuing the program.
   if (deleteProcessed or deleteNewFiles):
     print(f"*** ATTENTION! Running program with deleteProcessed={deleteProcessed} and deleteNewFiles={deleteNewFiles}. Files will be deleted! ***\n")
     cont = input("Continue (y/n)? ").lower()
-    if (cont == 'n'):
+    if (cont != 'y'):
+      print(f"Program aborted. To change delete preferences, edit the 'deleteProcessed' and 'deleteNewFiles' values when calling the 'processFilesInDir' function.")
       return
 
   # Loop through all files
@@ -60,6 +66,8 @@ def processFilesInDir(dirName, processingFunc,
 
 
 
+############################ getDirectoryPath ##################################
+
 # Gets the path to the directory containing all csv files, makes a new 
 # directory with 'dirName' if none is found. Disable folder creation by setting
 # createDir to False.
@@ -77,12 +85,15 @@ def getDirectoryPath(dirName, createDir=True):
 
 
 
+############################### processFile ####################################
+
 # Processes a file using its fileName and pathName (insert function inside)
 def processFile(fileName, filePath, processingFunc):
   processingFunc(fileName, filePath)
 
 
 
+################################ storeFile #####################################
 
 # After a file is processed, store it in a folder called 'processed'
 def storeFile(fileName, filePath, dirPath, folderName, createDir=True, deleteProcessed=False):
@@ -117,6 +128,8 @@ def storeFile(fileName, filePath, dirPath, folderName, createDir=True, deletePro
 
 
 
+############################### moveNewFile ####################################
+
 # For Studyfind Automation: moves new webscraped files into a "to_split" folder.
 # This function relies on the fact that the webscraper code writes the data
 # into a NEW csv file with the same file name, but creates it in the current directory.
@@ -149,6 +162,8 @@ def moveNewFile(fileName, dirPath, folderName, createDir=True):
 
 
 
+############################### splitFile ######################################
+
 # Splits a .csv file into files of a maximum size
 # This function has NO createDir parameter, as folders MUST be created.
 def splitFile(fileName, filePath, dirPath, splitSize, folderName="split_files"):
@@ -175,3 +190,4 @@ def splitFile(fileName, filePath, dirPath, splitSize, folderName="split_files"):
     dFrame = data[splitSize*i:splitSize*(i+1)]
     dFrame.to_csv(os.path.join(childFolderPath, f"{i}_{fileName}"), index=False)
   print(f"{splits} split files added to the '{childFolderName}' folder.")
+
