@@ -5,6 +5,7 @@ import pandas as pd
 
 def processFilesInDir(dirName, processingFunc, 
   createDir=True, moveNewFiles=False, splitFiles=False, splitSize=50,
+  deleteProcessed=False, deleteNewFiles=False,
   processedFolderName='processed', newFilesFolderName='new_files'):
   ### Change suffix based on the type of file being processed
   suffix = '.csv'
@@ -23,6 +24,12 @@ def processFilesInDir(dirName, processingFunc,
     print(f"--> The '{dirName}' folder is empty. Please add '{suffix}' files into this folder for processing.")
     return
   
+  if (deleteProcessed or deleteNewFiles):
+    print(f"*** ATTENTION! Running program with deleteProcessed={deleteProcessed} and deleteNewFiles={deleteNewFiles}. Files will be deleted! ***\n")
+    cont = input("Continue (y/n)? ").lower()
+    if (cont == 'n'):
+      return
+
   # Loop through all files
   for fileName in os.listdir(dirPath):
     filePath = os.path.join(dirPath, fileName)
@@ -31,13 +38,18 @@ def processFilesInDir(dirName, processingFunc,
       if (fileName.endswith(suffix)):
         print(f'Processing {fileName}...')
         processFile(fileName, filePath, processingFunc)
-        storeFile(fileName, filePath, dirPath, processedFolderName, createDir=createDir)
+        storeFile(fileName, filePath, dirPath, processedFolderName, createDir=createDir, deleteProcessed=deleteProcessed)
         # If there are NEW files that are written and moveNewFiles=True, move them.
         if (moveNewFiles):
           filePath = moveNewFile(fileName, dirPath, newFilesFolderName, createDir=createDir)
         # If files need to be split, split them
         if (splitFiles):
           splitFile(fileName, filePath, dirPath, splitSize)
+        # If deleteNewFiles is enabled, delete the new file via 'filePath'
+        if (deleteNewFiles and os.path.isfile(filePath)):
+          os.remove(filePath)
+          print(f"'{fileName}' deleted.")
+
         print(f"Complete!\n")
 
       # if file is not a .suffix file, does not process it.
@@ -71,8 +83,15 @@ def processFile(fileName, filePath, processingFunc):
 
 
 
+
 # After a file is processed, store it in a folder called 'processed'
-def storeFile(fileName, filePath, dirPath, folderName, createDir=True):
+def storeFile(fileName, filePath, dirPath, folderName, createDir=True, deleteProcessed=False):
+  # if the file is to be deleted, delete it and return from the function
+  if (deleteProcessed and os.path.isfile(filePath)):
+    os.remove(filePath)
+    print(f"'p-{fileName}' deleted.")
+    return
+
   folderPath = os.path.join(dirPath, folderName)
   folderExists = False
   
@@ -132,7 +151,7 @@ def moveNewFile(fileName, dirPath, folderName, createDir=True):
 
 # Splits a .csv file into files of a maximum size
 # This function has NO createDir parameter, as folders MUST be created.
-def splitFile(fileName, filePath, dirPath, size, folderName="split_files"):
+def splitFile(fileName, filePath, dirPath, splitSize, folderName="split_files"):
   parentFolderPath = os.path.join(dirPath, folderName)
 
   # create the 'to_split' directory if it does not exist
@@ -146,12 +165,13 @@ def splitFile(fileName, filePath, dirPath, size, folderName="split_files"):
   os.mkdir(childFolderPath)
   print(f"--> Created the '{childFolderName}' folder to store the split files.")
   
+  # splits the files
   data = pd.read_csv(filePath)
   data.rename(columns={'Contact Name':'Name'})
-  lines = len(data)
-  splits = lines//size + 1
+  total = len(data)
+  splits = (total//splitSize + 1) if (total % splitSize != 0) else (total//splitSize)
   for i in range(splits):
     # gets a data frame of size 'size' and converts it into a csv file.
-    dFrame = data[size*i:size*(i+1)]
+    dFrame = data[splitSize*i:splitSize*(i+1)]
     dFrame.to_csv(os.path.join(childFolderPath, f"{i}_{fileName}"), index=False)
   print(f"{splits} split files added to the '{childFolderName}' folder.")

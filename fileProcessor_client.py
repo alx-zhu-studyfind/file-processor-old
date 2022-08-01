@@ -13,16 +13,21 @@ from fileProcessor_lib import *
   # moveNewFiles: set to True if the processing writes a NEW file, that has to be stored
   # splitFiles: set to False by default, calls the split file function and splits the files into smaller segments.
   # splitSize: set to 50 by default, changes the size of splits if you want to split the file.
+  # deleteProcessed: set to False by default, if enabled, deletes files that have the 'p-' label
+  # deleteNewFiles: set to False by default, if enabled, deletes new files created from processing
   # processedFolderName: the name of the folder created for processed files
   # newFilesFolderName: set the folder name where the NEW files will be stored.
 
-# def processFilesInDir(dirName, processingFunc, 
-  # createDir=True, moveNewFiles=False, splitFiles=True, splitSize=50,
+# processFilesInDir(dirName, processingFunc, 
+  # createDir=True, moveNewFiles=False, splitFiles=False, splitSize=50,
+  # deleteProcessed=False, deleteNewFiles=False,
   # processedFolderName='processed', newFilesFolderName='new_files')
 
 processFilesInDir('TEST_data_sheets', runWebscraper, 
     moveNewFiles=True, newFilesFolderName="to_split",
     splitFiles=True, splitSize=5)
+
+# deleteProcessed=True, deleteNewFiles=True
 
 
 
